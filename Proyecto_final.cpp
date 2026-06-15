@@ -1,13 +1,11 @@
 #include <iostream>
 #include <string>
-#include <stdio.h>
 #include <fstream>
-
+#include <cstdlib> //libreria no vista en clase la use  para limpiar pantalla con system("cls") en Windows
 
 using namespace std;
 
 void mostarestudiantes() {
-
     ifstream archivonombres("../nombres.txt");
 
     if (!archivonombres.is_open()) {
@@ -22,7 +20,7 @@ void mostarestudiantes() {
     while (getline(archivonombres, carnet, ',') && getline(archivonombres, nombre)) {
         
         ifstream archivoestudiantes("../estudiantes.txt");
-        string carnetEstudiante, status; 
+        string carnetEstudiante, status = "DESCONOCIDO"; // Inicializado por si no se encuentra
         
         if (archivoestudiantes.is_open()) {
             while (getline(archivoestudiantes, carnetEstudiante, ',') && getline(archivoestudiantes, status)) {
@@ -60,84 +58,86 @@ void mostarestudiantes() {
 }
 
 void buscarEstudiante() {
-    
     ifstream archivonombres("../nombres.txt");
     if (!archivonombres.is_open()) {
-
-        cout << "No se pudo abrir el archivo de estudiantes.\n" ;
-        return ;
+        cout << "No se pudo abrir el archivo de estudiantes.\n";
+        return;
     }
+    
     string carnet;
     cout << "Ingrese el carnet del estudiante a buscar: ";
     cin >> carnet;
+    
     string carnetfile, nombrefile;
     bool Encontrado = false;
-    while (getline(archivonombres, carnetfile,',') && getline(archivonombres, nombrefile)) {
-
-            if (carnetfile == carnet) {
-                Encontrado = true;
-                
-                ifstream archivoestudiantes("../estudiantes.txt");
-                string carnetEstudiante, status;
-                if (archivoestudiantes.is_open()) {
-                    while (getline(archivoestudiantes, carnetEstudiante, ',') && getline(archivoestudiantes, status)) {
-                       
+    
+    while (getline(archivonombres, carnetfile, ',') && getline(archivonombres, nombrefile)) {
+        if (carnetfile == carnet) {
+            Encontrado = true;
+            
+            ifstream archivoestudiantes("../estudiantes.txt");
+            string carnetEstudiante, status = "DESCONOCIDO"; // CORREGIDO: Ahora sí guarda el estado
+            
+            if (archivoestudiantes.is_open()) {
+                while (getline(archivoestudiantes, carnetEstudiante, ',') && getline(archivoestudiantes, status)) {
+                    if (carnetEstudiante == carnet) {
+                        break; // CORREGIDO: Faltaba romper el ciclo al encontrar el estado
                     }
-                    archivoestudiantes.close(); 
                 }
-
-                cout << "\n=========================================\n";
-                cout << "ESTUDIANTE ENCONTRADO:\n";
-                cout << "Carnet: " << carnetfile << endl;
-                cout << "Nombre: " << nombrefile << endl;
-                cout << "Estado: " << status << endl;
-                cout << "=========================================\n";
-
-                ifstream archivonotas("../notas.txt");
-                string carnetNota, curso, nota;
-                bool tieneNotas = false;
-                if (archivonotas.is_open()) {
-                    cout << "Cursos inscritos:\n";
-                    while (getline(archivonotas, carnetNota, ',') && getline(archivonotas, curso, ',') && getline(archivonotas, nota)) {
-                        if (carnetNota == carnet) {
-                            cout << "- " << curso << ": " << nota << endl;
-                            tieneNotas = true;
-                        }
-                    }
-                    archivonotas.close(); 
-                }
-
-                if (!tieneNotas) {
-                    cout << "(No cuenta con registros de notas)\n";
-                }
-
-                
+                archivoestudiantes.close(); 
             }
+
+            cout << "\n=========================================\n";
+            cout << "ESTUDIANTE ENCONTRADO:\n";
+            cout << "Carnet: " << carnetfile << endl;
+            cout << "Nombre: " << nombrefile << endl;
+            cout << "Estado: " << status << endl;
+            cout << "=========================================\n";
+
+            ifstream archivonotas("../notas.txt");
+            string carnetNota, curso, nota;
+            bool tieneNotas = false;
+            
+            if (archivonotas.is_open()) {
+                cout << "Cursos inscritos:\n";
+                while (getline(archivonotas, carnetNota, ',') && getline(archivonotas, curso, ',') && getline(archivonotas, nota)) {
+                    if (carnetNota == carnet) {
+                        cout << "- " << curso << ": " << nota << endl;
+                        tieneNotas = true;
+                    }
+                }
+                archivonotas.close(); 
+            }
+
+            if (!tieneNotas) {
+                cout << "(No cuenta con registros de notas)\n";
+            }
+            break; // Opcional: rompe el bucle principal de nombres ya que lo encontramos
+        }
     }
+    
     if (!Encontrado) {
         cout << "Estudiante no encontrado.\n";
     }
     archivonombres.close();
-
 }
 
 void calcularPromedio() {
-
     ifstream archivonotas("../notas.txt");
     if (!archivonotas.is_open()) {
-
-        cout << "No se pudo abrir el archivo de estudiantes.\n" ;
-        return ;
+        cout << "No se pudo abrir el archivo de notas.\n";
+        return;
     }
+    
     string carnet;
     cout << "Ingrese el carnet del estudiante para calcular su promedio: ";
     cin >> carnet;
 
     ifstream archivonombres("../nombres.txt");
-    string carnetfile, nombrefile;
+    string carnetfile, nombrefile = "Desconocido";
 
     if (archivonombres.is_open()) {
-        while (getline(archivonombres, carnetfile,',') && getline(archivonombres, nombrefile)) {
+        while (getline(archivonombres, carnetfile, ',') && getline(archivonombres, nombrefile)) {
             if (carnetfile == carnet) {
                 break;
             }
@@ -145,41 +145,39 @@ void calcularPromedio() {
         archivonombres.close(); 
     }
 
-    string materiafile,notafile;
+    string materiafile, notafile;
     double suma = 0.0;
     int cantidadNotas = 0;
     bool Encontrado = false;
+    string listaMaterias = "";
 
-    string listaMaterias;
-
-    while(getline(archivonotas, carnetfile,',') && getline(archivonotas, materiafile,',') && getline(archivonotas, notafile)) {
+    while (getline(archivonotas, carnetfile, ',') && getline(archivonotas, materiafile, ',') && getline(archivonotas, notafile)) {
         if (carnetfile == carnet) {
             Encontrado = true;
             double nota = stod(notafile);
             suma += nota;
             cantidadNotas++;
-            cout << "-"<<materiafile<<" : "<<nota<<endl;
-
             listaMaterias += "-" + materiafile + " : " + notafile + "\n";
         }
     }
-    if (Encontrado&&cantidadNotas > 0) {
+    
+    if (Encontrado && cantidadNotas > 0) {
         double promedio = suma / cantidadNotas;
         cout << "\n====================================\n";
-        cout<<"Estudiante: "<<nombrefile<<endl;
-        cout<<"Carnet: "<<carnet<<endl;
-        cout<<"Total de materias: "<<cantidadNotas<<endl;
-        cout<<listaMaterias;
+        cout << "Estudiante: " << nombrefile << endl;
+        cout << "Carnet: " << carnet << endl;
+        cout << "Total de materias: " << cantidadNotas << endl;
+        cout << "------------------------------------\n";
+        cout << listaMaterias;
+        cout << "------------------------------------\n";
         cout << "Promedio del estudiante: " << promedio << endl;
         cout << "====================================\n\n";
     } else {
-        cout << "Estudiante no encontrado.\n";
+        cout << "Estudiante no encontrado o sin notas registradas.\n";
     }
     archivonotas.close();
 }
 
-
-// Estructura normal
 struct EstudianteReporte {
     string carnet;
     string nombre;
@@ -187,11 +185,9 @@ struct EstudianteReporte {
     double promedio;
 };
 
-// METODO VOID: Carga los datos usando tus rutas directas de OneDrive
 void cargarDatosEstudiantes(EstudianteReporte lista[], int &cantidad) {
     cantidad = 0; 
     
-    // RUTA COMPLETA PARA NOMBRES
     ifstream archivonombres("C:\\Users\\kenet\\OneDrive\\Documentos\\ING 3\\PROGRAMACION 1\\Proyecto_Final\\nombres.txt");
     if (!archivonombres.is_open()) {
         cout << "[ERROR] No se pudo abrir nombres.txt\n";
@@ -200,10 +196,8 @@ void cargarDatosEstudiantes(EstudianteReporte lista[], int &cantidad) {
 
     string carnetBase, nombreBase;
 
-    // Leer nombres.txt usando la coma
     while (getline(archivonombres, carnetBase, ',') && getline(archivonombres, nombreBase)) {
         
-        // RUTA COMPLETA PARA ESTUDIANTES
         ifstream archivoestudiantes("C:\\Users\\kenet\\OneDrive\\Documentos\\ING 3\\PROGRAMACION 1\\Proyecto_Final\\estudiantes.txt");
         string carnetEst, estadoEst = "INACTIVO";
         
@@ -216,7 +210,6 @@ void cargarDatosEstudiantes(EstudianteReporte lista[], int &cantidad) {
             archivoestudiantes.close();
         }
 
-        // RUTA COMPLETA PARA NOTAS
         ifstream archivonotas("C:\\Users\\kenet\\OneDrive\\Documentos\\ING 3\\PROGRAMACION 1\\Proyecto_Final\\notas.txt");
         string carnetNota, materiaNota, valorNota;
         double sumaNotas = 0.0;
@@ -232,13 +225,11 @@ void cargarDatosEstudiantes(EstudianteReporte lista[], int &cantidad) {
             archivonotas.close();
         }
 
-        // Un if normal para calcular promedio y evitar division por cero
         double prom = 0.0;
         if (cantidadNotas > 0) {
             prom = sumaNotas / cantidadNotas;
         }
 
-        // Guardar en el arreglo estatico
         lista[cantidad].carnet = carnetBase;
         lista[cantidad].nombre = nombreBase;
         lista[cantidad].estado = estadoEst; 
@@ -250,7 +241,6 @@ void cargarDatosEstudiantes(EstudianteReporte lista[], int &cantidad) {
     archivonombres.close();
 }
 
-// METODO VOID: El ordenamiento burbuja mas sencillo que existe
 void ordenarPorPromedioAscendente(EstudianteReporte lista[], int n) {
     for (int i = 0; i < n - 1; i++) {
         for (int j = 0; j < n - i - 1; j++) {
@@ -263,10 +253,9 @@ void ordenarPorPromedioAscendente(EstudianteReporte lista[], int n) {
     }
 }
 
-// METODO VOID: Submenu de Reportes tradicional
 void menuReportes() {
     int opcion = 0;
-    EstudianteReporte estudiantes[100]; // Arreglo basico para 100 alumnos
+    EstudianteReporte estudiantes[100]; 
     int totalEstudiantes = 0; 
 
     do {
@@ -334,13 +323,10 @@ void menuReportes() {
                 
                 for (int i = 0; i < totalEstudiantes; i++) {
                     string est = estudiantes[i].estado;
-                    
-                    // Compara la palabra de forma basica incluyendo las variantes con salto de linea oculto (\r)
                     if (est == "ACTIVO" || est == "ACTIVO\r" || est == "ACTIVO " || est == "activo" || est == "activo\r") {
                         cout << "Carnet: " << estudiantes[i].carnet 
                              << " | Nombre: " << estudiantes[i].nombre 
                              << " | Estado: " << est << "\n";
-                        
                         contadorActivos++; 
                     }
                 }
@@ -358,69 +344,47 @@ void menuReportes() {
         }
     } while (opcion != 5);
 }
-int main()
-{
 
-int menu;
+int main() {
+    int menu;
 
     do {
-        cout<<"------Biemvenido al Sistema del Colegio------\n";
-        cout<<"1. Mostrar estudiantes\n";
-        cout<<"2. Buscar estudiante por carnet\n";
-        cout<<"3. Calcular promedio de estudiante\n";
-        cout<<"4. Insertar estudiantes activos en base de datos\n";
-        cout<<"5. Reportes\n";
-        cout<<"6. Salir\n";
-        cout<<"Ingrese una opcion: ";
-        cin>>menu;
+        cout << "------Bienvenido al Sistema del Colegio------\n";
+        cout << "1. Mostrar estudiantes\n";
+        cout << "2. Buscar estudiante por carnet\n";
+        cout << "3. Calcular promedio de estudiante\n";
+        cout << "4. Insertar estudiantes activos en base de datos\n";
+        cout << "5. Reportes\n";
+        cout << "6. Salir\n";
+        cout << "Ingrese una opcion: ";
+        cin >> menu;
 
-
-        switch (menu)
-        {
-        case 1:
-
-            mostarestudiantes();
-
-            break;
-
-            case 2: 
-
-                buscarEstudiante();
-
+        switch (menu) {
+            case 1:
+                mostarestudiantes();
                 break;
-                
-                case 3:
-                    
-                    calcularPromedio();
-
-                    break;  
-
-                    case 4:
-
-                        break;
-
-                        case 5:
-
-                            menuReportes();
-
-                            break;
-
-                            case 6:
-
-                                system("cls");
-                                cout<<"Saliendo del sistema...\n";
-
-                                break;
-
+            case 2: 
+                buscarEstudiante();
+                break;
+            case 3:
+                calcularPromedio();
+                break;  
+            case 4:
+                // Espacio reservado
+                break;
+            case 5:
+                menuReportes();
+                break;
+            case 6:
+                system("cls");
+                cout << "Saliendo del sistema...\n";
+                break;
             default:
-
-            cout<<"Ingrese una opcion valida\n";
-
-            break;
+                cout << "Ingrese una opcion valida\n";
+                break;
         }
         
-    }while(menu!=6);
+    } while (menu != 6);
 
-return 0;
-
+    return 0;
 }
