@@ -370,7 +370,7 @@ int main() {
                 calcularPromedio();
                 break;  
             case 4:
-                // Espacio reservado
+                cout << "Opcion 4 seleccionada: Insertar estudiantes activos en base de datos (funcionalidad no implementada :(. ))\n";
                 break;
             case 5:
                 menuReportes();
